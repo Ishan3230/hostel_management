@@ -1,77 +1,32 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import axios from 'axios';
 
-export type UserRole = 'ADMIN' | 'STUDENT';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-export interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string | null;
-  address: string | null;
-  dateOfBirth: string | null;
-  role: UserRole;
-  createdAt: string;
-}
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: { 'Content-Type': 'application/json' },
+});
 
-export interface LoginResponse {
-  token: string;
-  user: AuthUser;
-}
-
-export const registerStudent = async (payload: {
-  name: string;
-  email: string;
-  password: string;
-  phoneNumber: string;
-  address: string;
-  dateOfBirth: string;
-}) => {
-  const res = await fetch(`${API_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || 'Registration failed');
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
+  return config;
+});
 
-  return data;
-};
-
-export const loginUser = async (payload: {
-  email: string;
-  password: string;
-  role: UserRole;
-}) => {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const data: LoginResponse | { message?: string } = await res.json();
-  if (!res.ok) {
-    throw new Error((data as { message?: string }).message || 'Login failed');
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
+);
 
-  return data as LoginResponse;
-};
-
-export const fetchDashboard = async (role: UserRole, token: string) => {
-  const path = role === 'ADMIN' ? '/api/admin/dashboard' : '/api/student/dashboard';
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: 'no-store',
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || 'Failed to fetch dashboard');
-  }
-
-  return data;
-};
+export default api;

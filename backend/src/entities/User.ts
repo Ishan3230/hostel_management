@@ -7,8 +7,10 @@ import {
 } from 'typeorm';
 
 export enum UserRole {
-  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  WARDEN = 'WARDEN',
   STUDENT = 'STUDENT',
+  SECURITY = 'SECURITY',
 }
 
 @Entity('users')
@@ -35,9 +37,18 @@ export class User {
   @Column({ type: 'date', nullable: true })
   dateOfBirth!: string | null;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  department!: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  year!: number | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true, unique: true })
+  studentId!: string | null;
+
   @Column({
-    type: 'enum',
-    enum: UserRole,
+    type: 'varchar',
+    length: 50,
     default: UserRole.STUDENT,
   })
   role!: UserRole;

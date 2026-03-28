@@ -1,149 +1,132 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  CardContent,
-  Container,
-  Paper,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { UserRole, loginUser } from '@/lib/api';
+import toast from 'react-hot-toast';
+import api from '@/lib/api';
+import { LogIn, Eye, EyeOff } from 'lucide-react';
+
+const ROLES = [
+  { value: 'SUPER_ADMIN', label: '🔐 Super Admin' },
+  { value: 'WARDEN', label: '🛡️ Warden / Admin' },
+  { value: 'STUDENT', label: '🎓 Student' },
+  { value: 'SECURITY', label: '👮 Security Guard' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({ email: '', password: '', role: 'STUDENT' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!role) {
-      return;
-    }
-    setError('');
     setLoading(true);
-
     try {
-      const data = await loginUser({ email, password, role });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.user.role);
-      localStorage.setItem('userName', data.user.name);
-
-      if (data.user.role === 'ADMIN') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/student/dashboard');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const res = await api.post('/auth/login', form);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      toast.success(`Welcome, ${res.data.user.name}!`);
+      const role = res.data.user.role;
+      if (role === 'SUPER_ADMIN') router.push('/admin');
+      else if (role === 'WARDEN') router.push('/warden');
+      else if (role === 'SECURITY') router.push('/security');
+      else router.push('/student');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper elevation={4} sx={{ p: 4, borderRadius: 3 }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Login
-        </Typography>
+    <div className="auth-page">
+      <div className="auth-card fade-in">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">🏠</div>
+          <h1>Smart Hostel</h1>
+          <p>Management System</p>
+        </div>
 
-        {!role ? (
-          <Box sx={{ display: 'grid', gap: 2, mt: 2 }}>
-            <Card variant="outlined">
-              <CardActionArea onClick={() => setRole('ADMIN')}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={700}>
-                    Admin
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Login to access admin dashboard.
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Role</label>
+            <select
+              className="form-select"
+              value={form.role}
+              onChange={e => setForm({ ...form, role: e.target.value })}
+            >
+              {ROLES.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </div>
 
-            <Card variant="outlined">
-              <CardActionArea onClick={() => setRole('STUDENT')}>
-                <CardContent>
-                  <Typography variant="h6" fontWeight={700}>
-                    Student
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Login as student or create a new account.
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Box>
-        ) : (
-          <>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Selected portal: <strong>{role}</strong>
-            </Typography>
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input
+              type="email"
+              className="form-input"
+              placeholder="you@hostel.com"
+              value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              required
+            />
+          </div>
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>
-              <TextField
-                type="email"
-                label="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
                 required
-                fullWidth
+                style={{ paddingRight: '48px' }}
               />
-
-              <TextField
-                type="password"
-                label="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                fullWidth
-              />
-
-              {error ? <Alert severity="error">{error}</Alert> : null}
-
-              <Button type="submit" variant="contained" size="large" disabled={loading}>
-                {loading ? 'Logging in...' : `Login as ${role}`}
-              </Button>
-
-              <Button
+              <button
                 type="button"
-                variant="text"
-                onClick={() => {
-                  setRole(null);
-                  setError('');
-                  setEmail('');
-                  setPassword('');
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  padding: 0,
                 }}
               >
-                Change Role
-              </Button>
-            </Box>
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-            {role === 'STUDENT' ? (
-              <Box mt={2}>
-                <Typography variant="body2">
-                  Don't have an account?{' '}
-                  <Link href="/register" style={{ color: '#1976d2', textDecoration: 'none' }}>
-                    Register
-                  </Link>
-                </Typography>
-              </Box>
-            ) : null}
-          </>
-        )}
-      </Paper>
-    </Container>
+          <button type="submit" className="btn btn-primary w-full" style={{ justifyContent: 'center', marginTop: '8px' }} disabled={loading}>
+            {loading ? <span className="spinner" /> : <LogIn size={18} />}
+            {loading ? 'Signing In...' : 'Sign In'}
+          </button>
+        </form>
+
+        <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(99,102,241,0.08)', borderRadius: '10px', border: '1px solid rgba(99,102,241,0.2)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Demo Credentials</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.8' }}>
+            <div>🔐 <strong>superadmin@hostel.com</strong> / admin123</div>
+            <div>🛡️ <strong>warden@hostel.com</strong> / warden123</div>
+            <div>🎓 <strong>student@hostel.com</strong> / student123</div>
+            <div>👮 <strong>security@hostel.com</strong> / security123</div>
+          </div>
+        </div>
+
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-muted)' }}>
+          New student?{' '}
+          <a href="/register" style={{ color: 'var(--primary-light)', textDecoration: 'none' }}>Register here</a>
+        </p>
+      </div>
+    </div>
   );
 }
