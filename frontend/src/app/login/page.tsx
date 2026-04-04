@@ -108,21 +108,11 @@ export default function LoginPage() {
 
           <button type="submit" className="btn btn-primary w-full" style={{ justifyContent: 'center', marginTop: '8px' }} disabled={loading}>
             {loading ? <span className="spinner" /> : <LogIn size={18} />}
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div style={{ marginTop: '24px', padding: '16px', background: 'rgba(99,102,241,0.08)', borderRadius: '10px', border: '1px solid rgba(99,102,241,0.2)' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Demo Credentials</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.8' }}>
-            <div>🔐 <strong>superadmin@hostel.com</strong> / admin123</div>
-            <div>🛡️ <strong>warden@hostel.com</strong> / warden123</div>
-            <div>🎓 <strong>student@hostel.com</strong> / student123</div>
-            <div>👮 <strong>security@hostel.com</strong> / security123</div>
-          </div>
-        </div>
-
-        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-muted)' }}>
+             {loading ? 'Signing In...' : 'Sign In'}
+           </button>
+         </form>
+ 
+         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--text-muted)' }}>
           New student?{' '}
           <a href="/register" style={{ color: 'var(--primary-light)', textDecoration: 'none' }}>Register here</a>
         </p>

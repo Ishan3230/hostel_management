@@ -1,66 +1,118 @@
-# Hostel Management System (Full Stack)
+# Smart Hostel Management System
 
-## Project Structure
+A comprehensive, full-stack hostel management solution built with Next.js, Express, and PostgreSQL. It streamlines administrative tasks, enhances student convenience, and improves security through automated entry/exit logging.
 
-- `frontend/` - Next.js (App Router + TypeScript)
-- `backend/` - Express + TypeORM + JWT auth
-- `database/` - PostgreSQL Docker Compose setup
+## 🏗️ Project Architecture
 
-## 1) Run PostgreSQL
+- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS (Glassmorphism UI)
+- **Backend**: Express.js, TypeORM, PostgreSQL, JWT Authentication
+- **Security**: Role-based access control (RBAC), QR-based authentication for entry/exit
 
-```bash
-cd database
-docker compose up -d
-```
+---
 
-## 2) Configure Backend
+## 🚀 Getting Started
 
-```bash
-cd ../backend
-cp .env.example .env
-npm install
-npm run dev
-```
+Follow these steps to set up the project locally on your machine **without using Docker**.
 
-Backend runs on `http://localhost:5000`.
+### 📋 Prerequisites
 
-### Backend Environment Variables
+- **Node.js** (v18 or higher)
+- **PostgreSQL** (v14 or higher) installed and running
+- **npm** or **yarn**
 
-- `DATABASE_URL` (required)
-- `JWT_SECRET` (required)
-- `PORT` (default `5000`)
-- `FRONTEND_URL` (default `http://localhost:3000`)
+---
 
-Default seeded admin:
-- email: `admin@hostel.com`
-- password: `admin123`
-- role: `ADMIN`
+### 1️⃣ Database Setup (Manual)
 
-## 3) Configure Frontend
+1. **Open PostgreSQL** (via pgAdmin or terminal `psql`):
+   ```sql
+   CREATE DATABASE hostel_management;
+   ```
 
-```bash
-cd ../frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
+2. **Verify connection**: Ensure your PostgreSQL service is running and you have the credentials (username/password) ready.
 
-Frontend runs on `http://localhost:3000`.
+---
 
-## Auth APIs
+### 2️⃣ Backend Configuration
 
-- `POST /api/auth/register` - student registration only
-- `POST /api/auth/login` - requires `role` (`ADMIN` or `STUDENT`) and returns JWT + user
-- `GET /api/admin/dashboard` - ADMIN only (Bearer token)
-- `GET /api/student/dashboard` - STUDENT only (Bearer token)
+1. **Navigate to backend folder**:
+   ```bash
+   cd backend
+   ```
 
-## Behavior
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-- Students can register and login.
-- Student registration captures `phoneNumber`, `address`, and `dateOfBirth`.
-- Admin can login with seeded credentials.
-- Login portal role must match account role (student cannot log in through admin portal).
-- JWT stored in `localStorage` (demo mode).
-- Frontend redirects by role:
-  - `ADMIN -> /admin/dashboard`
-  - `STUDENT -> /student/dashboard`
+3. **Configure Environment Variables**:
+   Create a `.env` file in the `backend` directory (copy from `.env.example` if available):
+   ```env
+   PORT=5000
+   DATABASE_URL=postgres://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/hostel_management
+   JWT_SECRET=your_super_secret_key_here
+   FRONTEND_URL=http://localhost:3000
+   ```
+   *Note: Replace `YOUR_USERNAME` and `YOUR_PASSWORD` with your actual PostgreSQL credentials.*
+
+4. **Start the Backend**:
+   The backend uses TypeORM with `synchronize: true`, so it will automatically create tables on startup.
+   ```bash
+   npm run dev
+   ```
+   *Server will run on `http://localhost:5000`*
+
+---
+
+### 3️⃣ Frontend Configuration
+
+1. **Navigate to frontend folder**:
+   ```bash
+   cd ../frontend
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**:
+   Create a `.env.local` file in the `frontend` directory:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:5000/api
+   ```
+
+4. **Start the Frontend**:
+   ```bash
+   npm run dev
+   ```
+   *Frontend will run on `http://localhost:3000`*
+
+---
+
+## 🔑 Default Credentials
+
+Use these accounts to explore the different roles in the system.
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Super Admin** | `superadmin@hostel.com` | `admin123` |
+| **Warden** | `warden@hostel.com` | `warden123` |
+| **Student** | `student@hostel.com` | `student123` |
+| **Security Guard** | `security@hostel.com` | `security123` |
+
+---
+
+## 🛠️ Features by Role
+
+For a detailed breakdown of what each user can do, please refer to the **[FEATURES.md](./FEATURES.md)** file.
+
+- **Super Admin**: System configuration and user oversight.
+- **Warden**: Daily administration, room allocations, and student management.
+- **Student**: Room requests, resource booking, marketplace, and QR logs.
+- **Security**: Entry/exit monitoring and visitor management.
+
+---
+
+## 🔒 Security Note
+This project uses JWT for authentication. Ensure `JWT_SECRET` is kept confidential in production environments.
